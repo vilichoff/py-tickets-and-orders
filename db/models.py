@@ -1,5 +1,10 @@
+from django.contrib.auth.models import AbstractUser
 from django.db import models
+from django.core.exceptions import ValidationError
 
+
+class User(AbstractUser):
+    pass
 
 class Genre(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -17,7 +22,7 @@ class Actor(models.Model):
 
 
 class Movie(models.Model):
-    title = models.CharField(max_length=255)
+    title = models.CharField(max_length=255, db_index=True)
     description = models.TextField()
     actors = models.ManyToManyField(to=Actor, related_name="movies")
     genres = models.ManyToManyField(to=Genre, related_name="movies")
@@ -50,3 +55,51 @@ class MovieSession(models.Model):
 
     def __str__(self) -> str:
         return f"{self.movie.title} {str(self.show_time)}"
+
+
+class Order(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self) -> str:
+        order_date = self.created_at.strftime("%Y-%m-%d %H:%M:%S")
+        return f"Order: {order_date}"
+
+
+class Ticket(models.Model):
+    movie_session = models.ForeignKey(to=MovieSession, on_delete=models.CASCADE)
+    order = models.ForeignKey(to=Order, on_delete=models.CASCADE)
+    row = models.IntegerField()
+    seat = models.IntegerField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["row", "seat", "movie_session"],
+                name="unique_combination_name"
+            )
+        ]
+
+    def clean(self) -> None:
+        if self.row > self.movie_session.cinema_hall.rows or self.row <= 0:
+            raise ValidationError({
+                "row": f"row number must be in range [1, {self.movie_session.cinema_hall.rows}]"
+            })
+
+        if self.seat > self.movie_session.cinema_hall.seats_in_row or self.seat <= 0:
+            raise ValidationError({
+                "seat": f"seat number must be in range [1, {self.movie_session.cinema_hall.seats_in_row}]"
+            })
+
+    def save(self, *args, **kwargs) -> None:
+        self.full_clean()
+        return super().save(*args, **kwargs)
+
+
+    def __str__(self) -> str:
+        return  f"Ticket: {self.movie_session} (row: {self.row}, seat: {self.seat})"
+
+
