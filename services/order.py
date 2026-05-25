@@ -4,6 +4,7 @@ from db.models import Order, Ticket
 from db.models import User
 from django.db import transaction
 
+@transaction.atomic
 def create_order(
     tickets: list,
     username: str,
@@ -14,15 +15,14 @@ def create_order(
         if date:
             order_data["created_at"] = date
 
-        with transaction.atomic():
-            order = Order.objects.create(**order_data)
-            for ticket in tickets:
-                Ticket.objects.create(
-                    row=ticket["row"],
-                    seat=ticket["seat"],
-                    movie_session_id=ticket["movie_session"],
-                    order=order
-                )
+        order = Order.objects.create(**order_data)
+        for ticket in tickets:
+            Ticket.objects.create(
+                row=ticket["row"],
+                seat=ticket["seat"],
+                movie_session_id=ticket["movie_session"],
+                order=order
+            )
 
         return order
 
