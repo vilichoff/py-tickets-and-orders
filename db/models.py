@@ -1,10 +1,11 @@
 from django.contrib.auth.models import AbstractUser
-from django.db import models
 from django.core.exceptions import ValidationError
+from django.db import models
 
 
 class User(AbstractUser):
     pass
+
 
 class Genre(models.Model):
     name = models.CharField(max_length=255, unique=True)
@@ -47,10 +48,14 @@ class CinemaHall(models.Model):
 class MovieSession(models.Model):
     show_time = models.DateTimeField()
     cinema_hall = models.ForeignKey(
-        to=CinemaHall, on_delete=models.CASCADE, related_name="movie_sessions"
+        to=CinemaHall,
+        on_delete=models.CASCADE,
+        related_name="movie_sessions"
     )
     movie = models.ForeignKey(
-        to=Movie, on_delete=models.CASCADE, related_name="movie_sessions"
+        to=Movie,
+        on_delete=models.CASCADE,
+        related_name="movie_sessions"
     )
 
     def __str__(self) -> str:
@@ -59,7 +64,11 @@ class MovieSession(models.Model):
 
 class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(to=User, on_delete=models.CASCADE)
+    user = models.ForeignKey(
+        to=User,
+        on_delete=models.CASCADE,
+        related_name="orders"
+    )
 
     class Meta:
         ordering = ["-created_at"]
@@ -70,8 +79,16 @@ class Order(models.Model):
 
 
 class Ticket(models.Model):
-    movie_session = models.ForeignKey(to=MovieSession, on_delete=models.CASCADE, related_name="tickets")
-    order = models.ForeignKey(to=Order, on_delete=models.CASCADE, related_name="order_tickets")
+    movie_session = models.ForeignKey(
+        to=MovieSession,
+        on_delete=models.CASCADE,
+        related_name="tickets"
+    )
+    order = models.ForeignKey(
+        to=Order,
+        on_delete=models.CASCADE,
+        related_name="order_tickets"
+    )
     row = models.IntegerField()
     seat = models.IntegerField()
 
@@ -86,20 +103,24 @@ class Ticket(models.Model):
     def clean(self) -> None:
         if self.row > self.movie_session.cinema_hall.rows:
             raise ValidationError({
-                "row": f"row number must be in available range: (1, rows): (1, {self.movie_session.cinema_hall.rows})"
+                "row": (
+                    f"row number must be in available range: "
+                    f"(1, rows): (1, {self.movie_session.cinema_hall.rows})"
+                )
             })
 
         if self.seat > self.movie_session.cinema_hall.seats_in_row:
             raise ValidationError({
-                "seat": f"seat number must be in available range: (1, seats_in_row): (1, {self.movie_session.cinema_hall.seats_in_row})"
+                "seat": (
+                    f"seat number must be in available range: "
+                    f"(1, seats_in_row): "
+                    f"(1, {self.movie_session.cinema_hall.seats_in_row})"
+                )
             })
 
     def save(self, *args, **kwargs) -> None:
         self.full_clean()
         return super().save(*args, **kwargs)
 
-
     def __str__(self) -> str:
-        return  f"Ticket: {self.movie_session} (row: {self.row}, seat: {self.seat})"
-
-
+        return f"Ticket: {self.movie_session} (row: {self.row}, seat: {self.seat})"
