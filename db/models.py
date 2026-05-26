@@ -123,4 +123,7 @@ class Ticket(models.Model):
         return super().save(*args, **kwargs)
 
     def __str__(self) -> str:
-        return f"Ticket: {self.movie_session} (row: {self.row}, seat: {self.seat})"
+        return (
+            f"Ticket: {self.movie_session} "
+            f"(row: {self.row}, seat: {self.seat})"
+        )
