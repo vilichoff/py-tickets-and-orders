@@ -125,5 +125,5 @@ class Ticket(models.Model):
     def __str__(self) -> str:
         return (
             f"{self.movie_session}"
-            f"(row: {self.row}, seat: {self.seat})"
+            f" (row: {self.row}, seat: {self.seat})"
         )
