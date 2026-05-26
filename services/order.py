@@ -8,16 +8,18 @@ from db.models import Order, Ticket, User
 
 @atomic
 def create_order(
-    tickets: list,
-    username: str,
-    date: datetime = None,
+        tickets: list,
+        username: str,
+        date: datetime = None,
 ) -> Order:
     user = User.objects.get(username=username)
-    order_data = {"user": user}
-    if date:
-        order_data["created_at"] = date
 
-    order = Order.objects.create(**order_data)
+    order = Order.objects.create(user=user)
+
+    if date:
+        order.created_at = date
+        order.save()
+
     for ticket in tickets:
         Ticket.objects.create(
             row=ticket["row"],

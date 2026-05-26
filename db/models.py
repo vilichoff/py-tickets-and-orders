@@ -75,7 +75,7 @@ class Order(models.Model):
 
     def __str__(self) -> str:
         order_date = self.created_at.strftime("%Y-%m-%d %H:%M:%S")
-        return f"Order: {order_date}"
+        return order_date
 
 
 class Ticket(models.Model):
@@ -124,6 +124,6 @@ class Ticket(models.Model):
 
     def __str__(self) -> str:
         return (
-            f"Ticket: {self.movie_session} "
+            f"{self.movie_session}"
             f"(row: {self.row}, seat: {self.seat})"
         )
