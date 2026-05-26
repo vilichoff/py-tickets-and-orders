@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from django.db.models import QuerySet
 from django.db.transaction import atomic
 
@@ -8,7 +10,7 @@ from db.models import Order, Ticket, User
 def create_order(
     tickets: list,
     username: str,
-    date=None,
+    date: datetime = None,
 ) -> Order:
     user = User.objects.get(username=username)
     order_data = {"user": user}
